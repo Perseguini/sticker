@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criador de Sticker Personalizado</title>
+    <link rel="stylesheet" href="estilo.css">
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal-js@2.1.1/dist/index.iife.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Crie Seu Sticker ✨</h1>
+
+        <div class="upload-box">
+            <label for="foto-input" class="upload-label">
+                📷 Clique para enviar sua foto
+            </label>
+            <input type="file" id="foto-input" accept="image/*">
+            <div id="processando" class="processando-oculto">
+                <div class="spinner"></div>
+                <p>Removendo fundo... ⏳</p>
+            </div>
+        </div>
+
+        <div class="comando-box">
+            <h3>📝 Seu pedido de criação</h3>
+            <textarea 
+                id="comando-usuario" 
+                placeholder="Exemplo:
+- Contorno branco grosso, fundo transparente, circular
+- Sem fundo, borda rosa, escreva 'Eu sou demais!'"></textarea>
+            <button id="aplicar-comando" class="aplicar-btn">✅ Aplicar Pedido</button>
+        </div>
+
+        <div class="configuracoes">
+            <h3>🎨 Configurações Manuais</h3>
+            
+            <div class="opcao">
+                <label>Cor do contorno:</label>
+                <input type="color" id="cor-contorno" value="#000000">
+            </div>
+
+            <div class="opcao">
+                <label>Tamanho do contorno:</label>
+                <input type="range" id="tamanho-contorno" min="2" max="15" value="5">
+                <span id="valor-contorno">5</span>
+            </div>
+
+            <div class="opcao">
+                <label>Cor de fundo:</label>
+                <input type="color" id="cor-fundo" value="#ffffff">
+                <label class="transparente-label">
+                    <input type="checkbox" id="fundo-transparente"> Transparente
+                </label>
+            </div>
+
+            <div class="opcao">
+                <label>Formato:</label>
+                <select id="formato">
+                    <option value="circulo">Círculo</option>
+                    <option value="quadrado">Quadrado</option>
+                    <option value="arredondado">Bordas Arredondadas</option>
+                </select>
+            </div>
+
+            <div class="opcao">
+                <label>Texto abaixo:</label>
+                <input type="text" id="texto-sticker" placeholder="Seu texto aqui...">
+            </div>
+
+            <div class="opcao">
+                <label>Remover fundo:</label>
+                <button id="remover-fundo-btn" class="remover-btn">🗑️ Remover Agora</button>
+            </div>
+        </div>
+
+        <div class="preview-container">
+            <h3>👀 Pré-visualização</h3>
+            <div class="sticker-wrapper">
+                <canvas id="sticker-canvas" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+        <button id="baixar-btn">⬇️ Baixar Sticker</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
