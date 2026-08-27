@@ -1,262 +1,186 @@
 // ==============================================
-// CRIADOR DE STICKER - VERSÃO 3.1 - COM ATALHOS ✅
+// VERSÃO 4.0 — FOTO VIRA STICKER DE VERDADE ✅
+// Recorte centralizado + máscara + borda + transparência
 // ==============================================
 
-const canvas = document.getElementById('sticker-canvas');
+const canvas = document.getElementById('sticker');
 const ctx = canvas.getContext('2d', {willReadFrequently:true});
-const TAMANHO_STICKER = 512;
+const TAM = 512; // Padrão WhatsApp
 
-let imagemOriginal = null;
+let imagem = null;
 let imagemSemFundo = null;
 
 // Elementos
 const inputFoto = document.getElementById('foto-input');
-const pedidoIa = document.getElementById('pedido-ia');
-const criarIaBtn = document.getElementById('criar-ia-btn');
-const atalhoBtns = document.querySelectorAll('.atalho-btn');
-const corContorno = document.getElementById('cor-contorno');
-const tamanhoContorno = document.getElementById('tamanho-contorno');
-const valorContorno = document.getElementById('valor-contorno');
-const corFundo = document.getElementById('cor-fundo');
-const fundoTransparente = document.getElementById('fundo-transparente');
+const pedidoEl = document.getElementById('pedido');
+const aplicarBtn = document.getElementById('aplicar-btn');
+const corBorda = document.getElementById('cor-borda');
+const espessura = document.getElementById('espessura');
+const valEspessura = document.getElementById('val-espessura');
+const transparente = document.getElementById('transparente');
 const formato = document.getElementById('formato');
-const textoSticker = document.getElementById('texto-sticker');
-const baixarBtn = document.getElementById('baixar-btn');
-const removerFundoBtn = document.getElementById('remover-fundo-btn');
-const processandoEl = document.getElementById('processando');
+const textoEl = document.getElementById('texto');
+const removerFundoBtn = document.getElementById('remover-fundo');
+const baixarBtn = document.getElementById('baixar');
+const processando = document.getElementById('processando');
 
-// Mapa de cores
-const mapaCores = {
+const cores = {
     branco:'#ffffff', preto:'#000000', vermelho:'#ff0000', azul:'#0066ff',
-    verde:'#00cc00', amarelo:'#ffdd00', rosa:'#ff69b4', roxo:'#9933ff',
-    laranja:'#ff9900', dourado:'#ffd700', cinza:'#888888'
+    verde:'#00cc00', rosa:'#ff69b4', roxo:'#9933ff', dourado:'#ffd700'
 };
 
-// ================= EVENTOS ================
-inputFoto.addEventListener('change', carregarImagem);
-criarIaBtn.addEventListener('click', criarStickerComIA);
-removerFundoBtn.addEventListener('click', removerFotoFundo);
-
-// 🎯 EVENTO DOS ATALHOS — preenche o campo automaticamente
-atalhoBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const prompt = btn.getAttribute('data-prompt');
-        pedidoIa.value = prompt;
-        pedidoIa.focus();
-        // Efeito visual de confirmação
-        btn.style.transform = 'scale(0.95)';
-        setTimeout(() => btn.style.transform = '', 150);
-    });
+// EVENTOS
+inputFoto.addEventListener('change', carregarFoto);
+aplicarBtn.addEventListener('click', aplicarPedido);
+removerFundoBtn.addEventListener('click', removerFundo);
+espessura.addEventListener('input', ()=>{
+    valEspessura.textContent = espessura.value;
+    desenhar();
 });
+[corBorda, transparente, formato, textoEl].forEach(el=>el.addEventListener('input',desenhar));
+baixarBtn.addEventListener('click', baixar);
 
-// Atualização automática em tempo real
-tamanhoContorno.addEventListener('input', ()=>{
-    valorContorno.textContent = tamanhoContorno.value;
-    desenharSticker();
-});
-[corContorno, corFundo, fundoTransparente, formato, textoSticker].forEach(el=>{
-    el.addEventListener('input', desenharSticker);
-});
-baixarBtn.addEventListener('click', baixarSticker);
-
-// ================= FUNÇÕES ================
-function carregarImagem(e){
+function carregarFoto(e){
     const arq = e.target.files[0];
     if(!arq) return;
-
     const leitor = new FileReader();
     leitor.onload = evt=>{
         const img = new Image();
         img.onload = ()=>{
-            imagemOriginal = img;
+            imagem = img;
             imagemSemFundo = null;
-            desenharSticker();
+            desenhar(); // ✅ Já vira sticker automaticamente
         };
         img.src = evt.target.result;
     };
     leitor.readAsDataURL(arq);
 }
 
-async function criarStickerComIA(){
-    const pedido = pedidoIa.value.trim();
-    if(!pedido) return alert('🤖 Descreva o sticker ou clique em um atalho acima!');
+// ✅ FUNÇÃO PRINCIPAL — FOTO VIRA STICKER
+function desenhar(){
+    const imgUsar = imagemSemFundo || imagem;
+    if(!imgUsar) return;
 
-    processandoEl.className = 'processando-ativo';
-    criarIaBtn.disabled = true;
-    criarIaBtn.textContent = 'Gerando...';
+    ctx.clearRect(0,0,TAM,TAM);
 
-    try{
-        const config = interpretarPedido(pedido);
-        
-        corContorno.value = config.corContorno;
-        tamanhoContorno.value = config.tamanhoContorno;
-        valorContorno.textContent = config.tamanhoContorno;
-        corFundo.value = config.corFundo;
-        fundoTransparente.checked = config.fundoTransparente;
-        formato.value = config.formato;
-        textoSticker.value = config.texto;
-
-        if(imagemOriginal && config.removerFundo){
-            await removerFotoFundo();
-        }
-
-        desenharSticker();
-        alert('✅ Sticker criado com sucesso! 🎉');
+    // Fundo
+    if(!transparente.checked){
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,TAM,TAM);
     }
-    catch(erro){
-        console.error(erro);
-        alert('⚠️ Erro. Tente outro pedido.');
+
+    const borda = Number(espessura.value);
+    const margem = borda + 25; // Espaço da borda
+    const areaUtil = TAM - margem * 2;
+
+    // Recorte + máscara
+    ctx.save();
+    ctx.beginPath();
+    desenharMascara(TAM/2, TAM/2, areaUtil/2);
+    ctx.clip();
+
+    // Desenha borda
+    if(borda > 0){
+        ctx.strokeStyle = corBorda.value;
+        ctx.lineWidth = borda;
+        ctx.beginPath();
+        desenharMascara(TAM/2, TAM/2, areaUtil/2);
+        ctx.stroke();
     }
-    finally{
-        processandoEl.className = 'processando-oculto';
-        criarIaBtn.disabled = false;
-        criarIaBtn.textContent = '🚀 Criar Sticker com IA';
+
+    // ✅ FOTO REDIMENSIONADA E CENTRALIZADA — NÃO FICA NORMAL!
+    const escala = Math.min(areaUtil / imgUsar.width, areaUtil / imgUsar.height);
+    const w = imgUsar.width * escala;
+    const h = imgUsar.height * escala;
+    const x = TAM/2 - w/2;
+    const y = TAM/2 - h/2;
+
+    ctx.drawImage(imgUsar, x, y, w, h);
+    ctx.restore();
+
+    // Texto
+    if(textoEl.value.trim()){
+        ctx.fillStyle = '#222';
+        ctx.font = 'bold 36px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(textoEl.value, TAM/2, TAM - 35);
     }
 }
 
-function interpretarPedido(texto){
-    const txt = texto.toLowerCase();
-    let config = {
-        corContorno: '#000000',
-        tamanhoContorno: 6,
-        corFundo: '#ffffff',
-        fundoTransparente: true,
-        formato: 'arredondado',
-        texto: '',
-        removerFundo: false
-    };
+function desenharMascara(cx, cy, r){
+    switch(formato.value){
+        case 'circulo': ctx.arc(cx, cy, r, 0, Math.PI*2); break;
+        case 'quadrado': ctx.rect(cx-r, cy-r, r*2, r*2); break;
+        case 'arredondado': ctx.roundRect(cx-r, cy-r, r*2, r*2, 40); break;
+    }
+}
 
-    for(const [nome, codigo] of Object.entries(mapaCores)){
+function aplicarPedido(){
+    if(!imagem) return alert('📷 Envie uma foto primeiro!');
+    const txt = pedidoEl.value.toLowerCase().trim();
+    if(!txt) return alert('✍️ Escreva seu pedido!');
+
+    // Cores
+    for(const [nome,cod] of Object.entries(cores)){
         if(txt.includes(nome)){
-            if(txt.includes('contorno') || txt.includes('borda')) config.corContorno = codigo;
-            if(txt.includes('fundo') && !txt.includes('sem fundo') && !txt.includes('transparente')) config.corFundo = codigo;
+            if(txt.includes('borda')||txt.includes('contorno')) corBorda.value = cod;
         }
     }
+    // Espessura
+    if(txt.includes('grosso')) espessura.value = 14;
+    if(txt.includes('fino')) espessura.value = 4;
+    if(txt.includes('sem borda')||txt.includes('sem contorno')) espessura.value = 0;
+    valEspessura.textContent = espessura.value;
+    // Formato
+    if(txt.includes('circulo')||txt.includes('circular')) formato.value = 'circulo';
+    if(txt.includes('quadrado')) formato.value = 'quadrado';
+    if(txt.includes('arredondado')) formato.value = 'arredondado';
+    // Transparente
+    if(txt.includes('sem fundo')||txt.includes('transparente')) transparente.checked = true;
+    // Remover fundo
+    if(txt.includes('remover fundo')||txt.includes('sem fundo')) removerFundo();
+    // Texto
+    const m = txt.match(/(escreva|texto):?\s*["']?([^"'\n]+)["']?/);
+    if(m) textoEl.value = m[2].trim();
 
-    if(txt.includes('grosso') || txt.includes('largo')) config.tamanhoContorno = 14;
-    if(txt.includes('fino') || txt.includes('delgado') || txt.includes('sem borda')) config.tamanhoContorno = 0;
-
-    if(txt.includes('círculo') || txt.includes('circular')) config.formato = 'circulo';
-    if(txt.includes('quadrado')) config.formato = 'quadrado';
-    if(txt.includes('arredondado')) config.formato = 'arredondado';
-
-    if(txt.includes('transparente') || txt.includes('sem fundo')){
-        config.fundoTransparente = true;
-        config.removerFundo = true;
-    }
-
-    const matchTexto = txt.match(/(escreva|texto|diga|com a frase):?\s*["']?([^"'\n]+)["']?/);
-    if(matchTexto) config.texto = matchTexto[2].trim().replace(/[.!]$/, '');
-
-    return config;
+    desenhar();
+    alert('✅ Sticker aplicado! 👇');
 }
 
-async function removerFotoFundo(){
-    if(!imagemOriginal) return alert('📷 Envie uma foto primeiro!');
-    
-    processandoEl.className = 'processando-ativo';
+async function removerFundo(){
+    if(!imagem) return alert('📷 Envie uma foto primeiro!');
+    processando.className = 'processando-ativo';
     removerFundoBtn.disabled = true;
     removerFundoBtn.textContent = 'Processando...';
 
     try{
-        const tempC = document.createElement('canvas');
-        tempC.width = imagemOriginal.width;
-        tempC.height = imagemOriginal.height;
-        tempC.getContext('2d').drawImage(imagemOriginal, 0, 0);
+        const temp = document.createElement('canvas');
+        temp.width = imagem.width; temp.height = imagem.height;
+        temp.getContext('2d').drawImage(imagem,0,0);
+        const blob = await new Promise(r=>temp.toBlob(r,'image/png',1));
+        const res = await imglyRemoveBackground(blob, {model:'medium', output:{format:'image/png'}});
         
-        const blob = await new Promise(resolve => tempC.toBlob(resolve, 'image/png', 1.0));
-        const resultado = await imglyRemoveBackground(blob, {
-            model: 'medium',
-            output: { format: 'image/png', quality: 1 }
-        });
-
         const imgSF = new Image();
-        imgSF.src = URL.createObjectURL(resultado);
-        await new Promise(res => imgSF.onload = res);
-
+        imgSF.src = URL.createObjectURL(res);
+        await new Promise(r=>imgSF.onload=r);
         imagemSemFundo = imgSF;
-        desenharSticker();
-    }
-    catch(erro){
-        console.error(erro);
+        desenhar();
+        alert('✅ Fundo removido!');
+    }catch(e){
+        console.error(e);
         alert('⚠️ Erro ao remover fundo.');
-    }
-    finally{
-        processandoEl.className = 'processando-oculto';
+    }finally{
+        processando.className = 'processando-oculto';
         removerFundoBtn.disabled = false;
-        removerFundoBtn.textContent = '🗑️ Remover Fundo';
+        removerFundoBtn.textContent = '🗑️ Remover Fundo da Foto';
     }
 }
 
-function desenharSticker(){
-    const imgUsar = imagemSemFundo || imagemOriginal;
-    if(!imgUsar) return;
-
-    ctx.clearRect(0, 0, TAMANHO_STICKER, TAMANHO_STICKER);
-
-    if(!fundoTransparente.checked){
-        ctx.fillStyle = corFundo.value;
-        ctx.fillRect(0, 0, TAMANHO_STICKER, TAMANHO_STICKER);
-    }
-
-    const temTexto = textoSticker.value.trim() !== '';
-    const alturaImagem = temTexto ? TAMANHO_STICKER - 90 : TAMANHO_STICKER;
-    const margem = 30;
-    const tamImagem = alturaImagem - margem * 2;
-
-    ctx.save();
-    ctx.beginPath();
-    desenharFormato(TAMANHO_STICKER/2, alturaImagem/2, tamImagem/2);
-    ctx.clip();
-
-    const espessura = Number(tamanhoContorno.value);
-    if(espessura > 0){
-        ctx.strokeStyle = corContorno.value;
-        ctx.lineWidth = espessura;
-        ctx.beginPath();
-        desenharFormato(TAMANHO_STICKER/2, alturaImagem/2, tamImagem/2);
-        ctx.stroke();
-    }
-
-    const escala = Math.min(tamImagem / imgUsar.width, tamImagem / imgUsar.height);
-    const w = imgUsar.width * escala;
-    const h = imgUsar.height * escala;
-    const x = TAMANHO_STICKER/2 - w/2;
-    const y = alturaImagem/2 - h/2;
-    
-    ctx.drawImage(imgUsar, x, y, w, h);
-    ctx.restore();
-
-    if(temTexto){
-        ctx.fillStyle = '#222';
-        ctx.font = 'bold 36px Segoe UI, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(textoSticker.value, TAMANHO_STICKER/2, TAMANHO_STICKER - 45);
-    }
-}
-
-function desenharFormato(cx, cy, r){
-    switch(formato.value){
-        case 'circulo':
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            break;
-        case 'quadrado':
-            ctx.rect(cx - r, cy - r, r * 2, r * 2);
-            break;
-        case 'arredondado':
-            ctx.roundRect(cx - r, cy - r, r * 2, r * 2, 40);
-            break;
-    }
-}
-
-function baixarSticker(){
-    if(!imagemOriginal) return alert('📷 Envie uma foto ou clique em um atalho e crie!');
-    
-    const link = document.createElement('a');
-    link.download = `sticker_${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    
+function baixar(){
+    if(!imagem) return alert('📷 Envie uma foto primeiro!');
+    const a = document.createElement('a');
+    a.download = `sticker_${Date.now()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
     setTimeout(()=>alert('✅ Sticker baixado! Envie no WhatsApp 📱'), 300);
 }
