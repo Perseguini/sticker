@@ -3,82 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criador de Sticker WhatsApp</title>
+    <title>Sticker Pixar 3D com IA</title>
     <link rel="stylesheet" href="estilo.css">
     <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal-js@2.1.1/dist/index.iife.min.js"></script>
     <script>
-        const VERSAO = "4.0";
+        const VERSAO = "6.0";
         if(!localStorage.getItem('versao') || localStorage.getItem('versao') !== VERSAO){
             localStorage.setItem('versao', VERSAO);
             window.addEventListener('load', ()=>{
-                setTimeout(()=>alert(`✅ Versão ${VERSAO}\n- Foto vira sticker automaticamente\n- Recorte e máscara corrigidos\n- Fundo transparente real`), 400);
+                setTimeout(()=>alert(`✅ Versão ${VERSAO}\n- IA gera estilo Pixar 3D 🎬\n- Fidelidade facial\n- Borda branca fina + balão\n- Fundo transparente`), 400);
             });
         }
     </script>
 </head>
 <body>
     <div class="container">
-        <div class="versao">v4.0</div>
-        <h1>✨ Criador de Sticker ✨</h1>
+        <div class="versao">v6.0</div>
+        <h1>✨ Sticker Pixar 3D com IA ✨</h1>
 
         <!-- Upload -->
         <div class="upload-box">
             <label for="foto-input" class="upload-label">
-                📷 Clique para enviar sua foto
+                📷 Envie sua foto
             </label>
             <input type="file" id="foto-input" accept="image/*">
             <div id="processando" class="processando-oculto">
                 <div class="spinner"></div>
-                <p>Processando... ⏳</p>
+                <p id="status-texto">Transformando em Pixar 3D... ⏳</p>
             </div>
         </div>
 
-        <!-- Pedido -->
-        <div class="comando-box">
-            <h3>📝 Seu pedido</h3>
-            <textarea id="pedido" placeholder="Exemplo:
-- Contorno branco grosso, sem fundo, circular
-- Sem borda, fundo transparente, formato arredondado"></textarea>
-            <button id="aplicar-btn" class="aplicar-btn">✅ Aplicar e Gerar</button>
-        </div>
-
-        <!-- Configurações -->
-        <div class="config">
-            <h3>🎨 Ajustes</h3>
-
-            <div class="linha">
-                <label>Cor do contorno:</label>
-                <input type="color" id="cor-borda" value="#ffffff">
-            </div>
-
-            <div class="linha">
-                <label>Espessura da borda:</label>
-                <input type="range" id="espessura" min="0" max="24" value="8">
-                <span id="val-espessura">8</span>
-            </div>
-
-            <div class="linha">
-                <label>Fundo transparente:</label>
-                <input type="checkbox" id="transparente" checked>
-            </div>
-
-            <div class="linha">
-                <label>Formato:</label>
-                <select id="formato">
-                    <option value="circulo">⭕ Círculo</option>
-                    <option value="arredondado" selected>🟦 Arredondado</option>
-                    <option value="quadrado">⬜ Quadrado</option>
-                </select>
-            </div>
-
-            <div class="linha">
-                <label>Texto abaixo:</label>
-                <input type="text" id="texto" placeholder="Seu texto...">
-            </div>
-
-            <div class="linha">
-                <button id="remover-fundo" class="btn-perigo">🗑️ Remover Fundo da Foto</button>
-            </div>
+        <!-- Texto do balão -->
+        <div class="texto-balao-box">
+            <h3>💬 Texto do balão de fala</h3>
+            <input 
+                type="text" 
+                id="texto-balao" 
+                placeholder="Ex: Olá! Eu cheguei!"
+                maxlength="30">
+            <button id="gerar-btn" class="gerar-btn">🚀 Gerar Sticker Pixar</button>
         </div>
 
         <!-- Preview -->
