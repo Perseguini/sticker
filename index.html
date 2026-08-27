@@ -3,76 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criador de Sticker com IA</title>
+    <title>Criador de Sticker WhatsApp</title>
     <link rel="stylesheet" href="estilo.css">
     <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal-js@2.1.1/dist/index.iife.min.js"></script>
     <script>
-        const VERSAO = "3.1";
-        console.log(`✅ Sticker App - Versão ${VERSAO}`);
-        if(!localStorage.getItem('versao_atual')){
-            localStorage.setItem('versao_atual', VERSAO);
+        const VERSAO = "4.0";
+        if(!localStorage.getItem('versao') || localStorage.getItem('versao') !== VERSAO){
+            localStorage.setItem('versao', VERSAO);
             window.addEventListener('load', ()=>{
-                setTimeout(()=>alert(`🎉 Atualizado para a Versão ${VERSAO}!\n+ Atalhos de prompts prontos 🎯`), 500);
+                setTimeout(()=>alert(`✅ Versão ${VERSAO}\n- Foto vira sticker automaticamente\n- Recorte e máscara corrigidos\n- Fundo transparente real`), 400);
             });
-        }
-        else if(localStorage.getItem('versao_atual') !== VERSAO){
-            localStorage.setItem('versao_atual', VERSAO);
-            alert(`✨ v${VERSAO}: Atalhos de prompts adicionados!`);
         }
     </script>
 </head>
 <body>
     <div class="container">
-        <div class="versao-badge">v3.1</div>
-        <h1>✨ Criador de Sticker com IA ✨</h1>
+        <div class="versao">v4.0</div>
+        <h1>✨ Criador de Sticker ✨</h1>
 
-        <!-- 🎯 ATALHOS DE PROMPTS PRONTOS -->
-        <div class="atalhos-box">
-            <h4>🎯 Atalhos Rápidos — Clique para usar</h4>
-            <div class="atalhos-grid">
-                <button class="atalho-btn" data-prompt="Contorno branco grosso, fundo transparente, formato circular, sem texto">
-                    ⭕ Borda branca + Transparente
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno preto grosso, fundo transparente, formato arredondado">
-                    ⬜ Borda preta + Transparente
-                </button>
-                <button class="atalho-btn" data-prompt="Remover fundo, sem borda, fundo transparente">
-                    🗑️ Sem fundo / Sem borda
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno rosa grosso, fundo transparente, formato circular, escreva 'Eu te amo!'">
-                    💖 Amor + Borda Rosa
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno dourado, fundo transparente, formato arredondado, escreva 'Olá pessoal!'">
-                    ✨ Dourado + Saudação
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno verde, fundo transparente, formato circular, escreva 'Tô chegando!'">
-                    💚 Chegando!
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno vermelho grosso, fundo transparente, escreva 'Parabéns!'">
-                    🎉 Parabéns!
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno azul, fundo transparente, formato circular, escreva 'Obrigado!'">
-                    💙 Obrigado!
-                </button>
-                <button class="atalho-btn" data-prompt="Contorno amarelo, fundo transparente, escreva 'Vamos com tudo!'">
-                    ⚡ Motivação
-                </button>
-            </div>
-        </div>
-
-        <!-- PEDIDO DE CRIAÇÃO POR IA -->
-        <div class="comando-box">
-            <h3>🤖 Seu pedido</h3>
-            <textarea 
-                id="pedido-ia" 
-                placeholder="Descreva ou clique em um atalho acima! ✨"></textarea>
-            <button id="criar-ia-btn" class="criar-ia-btn">🚀 Criar Sticker com IA</button>
-        </div>
-
-        <!-- Área de Upload -->
+        <!-- Upload -->
         <div class="upload-box">
             <label for="foto-input" class="upload-label">
-                📷 Envie uma foto para transformar em sticker
+                📷 Clique para enviar sua foto
             </label>
             <input type="file" id="foto-input" accept="image/*">
             <div id="processando" class="processando-oculto">
@@ -81,56 +33,63 @@
             </div>
         </div>
 
-        <div class="configuracoes">
-            <h3>🎨 Ajustes Manuais</h3>
-            
-            <div class="opcao">
+        <!-- Pedido -->
+        <div class="comando-box">
+            <h3>📝 Seu pedido</h3>
+            <textarea id="pedido" placeholder="Exemplo:
+- Contorno branco grosso, sem fundo, circular
+- Sem borda, fundo transparente, formato arredondado"></textarea>
+            <button id="aplicar-btn" class="aplicar-btn">✅ Aplicar e Gerar</button>
+        </div>
+
+        <!-- Configurações -->
+        <div class="config">
+            <h3>🎨 Ajustes</h3>
+
+            <div class="linha">
                 <label>Cor do contorno:</label>
-                <input type="color" id="cor-contorno" value="#000000">
+                <input type="color" id="cor-borda" value="#ffffff">
             </div>
 
-            <div class="opcao">
-                <label>Espessura:</label>
-                <input type="range" id="tamanho-contorno" min="2" max="20" value="6">
-                <span id="valor-contorno">6</span>
+            <div class="linha">
+                <label>Espessura da borda:</label>
+                <input type="range" id="espessura" min="0" max="24" value="8">
+                <span id="val-espessura">8</span>
             </div>
 
-            <div class="opcao">
-                <label>Cor de fundo:</label>
-                <input type="color" id="cor-fundo" value="#ffffff">
-                <label class="transparente-label">
-                    <input type="checkbox" id="fundo-transparente" checked> Transparente
-                </label>
+            <div class="linha">
+                <label>Fundo transparente:</label>
+                <input type="checkbox" id="transparente" checked>
             </div>
 
-            <div class="opcao">
+            <div class="linha">
                 <label>Formato:</label>
                 <select id="formato">
                     <option value="circulo">⭕ Círculo</option>
-                    <option value="quadrado">⬜ Quadrado</option>
                     <option value="arredondado" selected>🟦 Arredondado</option>
+                    <option value="quadrado">⬜ Quadrado</option>
                 </select>
             </div>
 
-            <div class="opcao">
-                <label>Texto:</label>
-                <input type="text" id="texto-sticker" placeholder="Seu texto...">
+            <div class="linha">
+                <label>Texto abaixo:</label>
+                <input type="text" id="texto" placeholder="Seu texto...">
             </div>
 
-            <div class="opcao">
-                <label>Foto sem fundo:</label>
-                <button id="remover-fundo-btn" class="remover-btn">🗑️ Remover Fundo</button>
-            </div>
-        </div>
-
-        <div class="preview-container">
-            <h3>👀 Pré-visualização <small>(512×512)</small></h3>
-            <div class="sticker-wrapper">
-                <canvas id="sticker-canvas" width="512" height="512"></canvas>
+            <div class="linha">
+                <button id="remover-fundo" class="btn-perigo">🗑️ Remover Fundo da Foto</button>
             </div>
         </div>
 
-        <button id="baixar-btn">⬇️ Baixar Sticker (512×512 PNG)</button>
+        <!-- Preview -->
+        <div class="preview">
+            <h3>👀 Pré-visualização (512×512)</h3>
+            <div class="canvas-wrapper">
+                <canvas id="sticker" width="512" height="512"></canvas>
+            </div>
+        </div>
+
+        <button id="baixar" class="btn-baixar">⬇️ Baixar Sticker PNG</button>
     </div>
 
     <script src="script.js"></script>
